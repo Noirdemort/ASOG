@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="jl1.0.1:jar">
+    <output-path>$PROJECT_DIR$/build/classes/artifacts/jl1_0_1_jar</output-path>
+    <root id="archive" name="jl1.0.1.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/jl1.0.1/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>
