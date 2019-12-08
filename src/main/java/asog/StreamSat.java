@@ -133,8 +133,43 @@ class StreamSat {
      *
      * @param directoryPath path from which the audio files are to be read recursively.
      */
-    void readDirectory(String directoryPath){
+    double[][] readDirectory(String directoryPath){
+        File directory=new File(directoryPath);
+        File[] contents=directory.listFiles();
+      
+        int l=directory.listFiles().length;
+        int j=0;
 
-   }
+         double[][] filearrays=new double[l][];
 
+         for( File f:contents)
+        {
+            String extension = getFileExtension(new File(f.getAbsolutePath()));
+            if(extension == "*.wav")
+            {
+                AudioInputStream as=new StreamSat().readWAV(f.getName());
+                double[] d=toDoubleArray();
+                filearrays[j]=d;
+                j++;
+                  
+            }
+            else if(extension== "*.mp3")
+            {
+                AudioInputStream as=new StreamSat().readMP3(f.getName());
+                double[] d=toDoubleArray();
+                filearrays[j]=d;
+                j++;
+                
+            }
+            else 
+            {
+                 InputStream inputStream = new FileInputStream(f.getAbsolutePath());
+                 AudioInputStream as=new StreamSat().readRAW(inputStream);
+                 double[] d=toDoubleArray();
+                 filearrays[j]=d;
+                 j++;
+                
+            }
+        }
+     return filearrays;
 }
