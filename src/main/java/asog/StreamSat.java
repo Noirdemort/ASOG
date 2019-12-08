@@ -133,13 +133,17 @@ class StreamSat {
      *
      * @param directoryPath path from which the audio files are to be read recursively.
      */
-    void readDirectory(String directoryPath){
+    double[][] readDirectory(String directoryPath){
         File directory=new File(directoryPath);
         File[] contents=directory.listFiles();
         String fileSeparator = System.getProperty("file.separator");
         String absoluteFilePath = fileSeparator+"Users"+fileSeparator+"AudioFileArrays"+fileSeparator+"audiofilesdata.txt";
         File file = new File(absoluteFilePath);
         file = new File("audiofilesdata.txt");
+        int l=directory.listFiles().length;
+        int i=0;
+        
+        double[][] filearrays=new double[][l];
         
         for( File f:contents)
         {
@@ -148,6 +152,8 @@ class StreamSat {
             {
                 AudioInputStream as=readWAV(f.getName());
                 double[] d=toDoubleArray();
+                filearrays[i]=d;
+                i++;
                 BufferedWriter outputWriter = null;
                   outputWriter = new BufferedWriter(new FileWriter(file.getName()));
                   for (int i = 0; i < d.length; i++) {
@@ -164,6 +170,8 @@ class StreamSat {
             {
                 AudioInputStream as=readMP3(f.getName());
                 double[] d=toDoubleArray();
+                filearrays[i]=d;
+                i++;
                 BufferedWriter outputWriter = null;
                   outputWriter = new BufferedWriter(new FileWriter(file.getName()));
                   for (int i = 0; i < d.length; i++) {
@@ -181,6 +189,8 @@ class StreamSat {
                  InputStream inputStream = new FileInputStream(f.getAbsolutePath());
                  AudioInputStream as= readRAW(inputStream);
                  double[] d=toDoubleArray();
+                 filearrays[i]=d;
+                 i++;
                  BufferedWriter outputWriter = null;
                   outputWriter = new BufferedWriter(new FileWriter(file.getName()));
                   for (int i = 0; i < d.length; i++) {
@@ -194,5 +204,5 @@ class StreamSat {
                   outputWriter.close(); 
             }
         }
-
+     return filearrays;
 }
