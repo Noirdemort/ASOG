@@ -13,11 +13,11 @@ import javazoom.jl.decoder.JavaLayerException;
 
 class StreamSat {
 
-    public enum AudioType { RAW, WAV, MP3 };
+    public enum AudioType { RAW, WAV, MP3 }
 
-    protected AudioInputStream audio;
-    protected AudioType audioType;
-    protected byte[] audioData;
+    AudioInputStream audio;
+    AudioType audioType;
+    byte[] audioData;
 
 
     AudioInputStream readWAV(String filename) throws IOException, UnsupportedAudioFileException{
@@ -34,7 +34,7 @@ class StreamSat {
         conv.convert(filename, "temp.wav");
         File file = new File("temp.wav");
         AudioInputStream in= AudioSystem.getAudioInputStream(file);
-        AudioInputStream din = null;
+        AudioInputStream din;
         AudioFormat baseFormat = in.getFormat();
         AudioFormat decodedFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
                 baseFormat.getSampleRate(),
@@ -47,7 +47,7 @@ class StreamSat {
         audio = din;
         audioType = AudioType.MP3;
         setData();
-        file.delete();
+        final boolean delete = file.delete();
         return din;
     }
 

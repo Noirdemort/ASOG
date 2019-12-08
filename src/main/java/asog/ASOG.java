@@ -18,7 +18,9 @@ public class ASOG {
         } catch (Exception e){
             e.printStackTrace();
         }
-        System.out.println(streamSat.audioData);
+        System.out.println(streamSat.audioType);
+        System.out.println(streamSat.audio);
+
 
         double []axr = streamSat.toDoubleArray();
 
