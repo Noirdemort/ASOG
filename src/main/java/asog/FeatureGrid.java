@@ -1,10 +1,5 @@
 package asog;
 
-import com.sun.xml.internal.bind.v2.TODO;
-
-import org.tensorflow.op.annotation.Operator;
-
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;

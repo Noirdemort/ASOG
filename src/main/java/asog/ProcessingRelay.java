@@ -2,6 +2,8 @@ package asog;
 
 import com.sun.tools.javac.util.Log;
 
+import org.deeplearning4j.clustering.algorithm.Distance;
+import org.deeplearning4j.clustering.kmeans.KMeansClustering;
 import org.deeplearning4j.nn.conf.CacheMode;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
@@ -12,15 +14,20 @@ import org.deeplearning4j.nn.conf.layers.LSTM;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer;
 import org.deeplearning4j.nn.conf.layers.SubsamplingLayer;
+import org.deeplearning4j.nn.conf.layers.variational.BernoulliReconstructionDistribution;
+import org.deeplearning4j.nn.conf.layers.variational.VariationalAutoencoder;
 import org.deeplearning4j.nn.gradient.Gradient;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
+import org.deeplearning4j.nn.workspace.LayerWorkspaceMgr;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.ndarray.INDArray;
 
 import org.nd4j.linalg.dataset.DataSet;
 import org.nd4j.linalg.dataset.SplitTestAndTrain;
+import org.nd4j.linalg.dataset.api.DataSetPreProcessor;
+import org.nd4j.linalg.dataset.api.iterator.DataSetIterator;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Nesterovs;
 import org.nd4j.linalg.learning.config.RmsProp;
@@ -144,6 +151,7 @@ class ProcessingRelay {
 
     }
 
+
     /**
      *  Self Organizing Maps for enhancing features
      */
@@ -151,11 +159,55 @@ class ProcessingRelay {
 
     }
 
-    /**
-     *  Auto-encoders with k-Means for extracting voices
-     */
-    void  autoKencoders(){
 
+    /**
+     *  Auto-encoders with k-Means for extracting voices... in my head?
+     *
+     * @param features array rows consisting of mfcc features with mixed voices per row.
+     * @param numClusters number of voices predicted by RNN model
+     *
+     * @return KMeansClustering : kmeans model with distinct voice clusters
+     */
+    KMeansClustering autoKencoders(double[] features, int numClusters){
+        INDArray featureVector = Nd4j.createFromArray(features);
+
+        Nd4j.getRandom().setSeed(seed);
+        MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
+                .seed(seed)
+                .updater(new RmsProp(1e-3))
+                .weightInit(WeightInit.XAVIER)
+                .l2(1e-4)
+                .list()
+                .layer(new VariationalAutoencoder.Builder()
+                        .activation(Activation.LEAKYRELU)
+                        .encoderLayerSizes(256, 256)        //2 encoder layers, each of size 256
+                        .decoderLayerSizes(256, 256)        //2 decoder layers, each of size 256
+                        .pzxActivationFunction(Activation.IDENTITY)  //p(z|data) activation function
+                        .reconstructionDistribution(new BernoulliReconstructionDistribution(Activation.SIGMOID.getActivationFunction()))     //Bernoulli distribution for p(data|z) (binary or 0 to 1 data only)
+                        .nIn(28 * 28)                       //Input size: 28x28
+                        .nOut(2)                            //Size of the latent variable space: p(z|x). 2 dimensions here for plotting, use more in general
+                        .build())
+                .build();
+
+        MultiLayerNetwork net = new MultiLayerNetwork(conf);
+        net.init();
+        net.setLearningRate(0.0001);
+        net.setEpochCount(10);
+        net.setCacheMode(CacheMode.DEVICE);
+
+        //Get the variational autoencoder layer
+        org.deeplearning4j.nn.layers.variational.VariationalAutoencoder vae
+                = (org.deeplearning4j.nn.layers.variational.VariationalAutoencoder) net.getLayer(0);
+
+
+//        INDArray latentSpaceValues = vae.activate(featureVector, false, LayerWorkspaceMgr.noWorkspaces());                     //Collect and record the latent space values before training starts
+        vae.fit(featureVector, LayerWorkspaceMgr.noWorkspaces());
+
+        // TODO("Implement Kmeans properly and verify auto-encoder model")
+        final int MAX_ITERATIONS = 300;
+        KMeansClustering kmeans = KMeansClustering.setup(numClusters, MAX_ITERATIONS, Distance.COSINE_DISTANCE);
+
+        return kmeans;
     }
 
 
@@ -265,6 +317,7 @@ class ProcessingRelay {
 
         return net;
 
+        /* For saving model to  disk */
 //        File modelPath = new File(BASE_PATH + "/model_name.zip");
 //        ModelSerializer.writeModel(net, modelPath, true);
 
