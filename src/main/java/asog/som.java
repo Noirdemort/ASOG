@@ -1,4 +1,5 @@
 package som;
+import java.util.*;
 
 public class SOM extends Grid
 {
