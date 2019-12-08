@@ -20,7 +20,6 @@ import edu.cmu.sphinx.frontend.util.AudioFileDataSource;
 
 public class FeatureGrid {
 
-
     Data mfcc(String filename, int minFreq, int maxFreq, int numFilters) throws MalformedURLException {
         // TODO("Figure out the meaning of these parameters");
         AudioFileDataSource audioDataSource = new AudioFileDataSource(3200, null);
@@ -46,4 +45,5 @@ public class FeatureGrid {
         // TODO("write mel spectogram code here");
     }
 
+    int i,j,z;
 }
