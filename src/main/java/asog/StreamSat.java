@@ -133,8 +133,76 @@ class StreamSat {
      *
      * @param directoryPath path from which the audio files are to be read recursively.
      */
-    void readDirectory(String directoryPath){
-
-   }
-
+    double[][] readDirectory(String directoryPath){
+        File directory=new File(directoryPath);
+        File[] contents=directory.listFiles();
+        String fileSeparator = System.getProperty("file.separator");
+        String absoluteFilePath = fileSeparator+"Users"+fileSeparator+"AudioFileArrays"+fileSeparator+"audiofilesdata.txt";
+        File file = new File(absoluteFilePath);
+        file = new File("audiofilesdata.txt");
+        int l=directory.listFiles().length;
+        int j=0;
+        
+        double[][] filearrays=new double[][l];
+        
+        for( File f:contents)
+        {
+            String extension = getFileExtension(new File(f.getAbsolutePath()));
+            if(extension == "*.wav")
+            {
+                AudioInputStream as=readWAV(f.getName());
+                double[] d=toDoubleArray();
+                filearrays[j]=d;
+                j++;
+                BufferedWriter outputWriter = null;
+                  outputWriter = new BufferedWriter(new FileWriter(file.getName()));
+                  for (int i = 0; i < d.length; i++) {
+                    
+                    outputWriter.write(d[i]+"");
+                    
+                    outputWriter.write(Double.toString(d[i]);
+                    outputWriter.newLine();
+                  }
+                  outputWriter.flush();  
+                  outputWriter.close();  
+            }
+            else if(extension== "*.mp3")
+            {
+                AudioInputStream as=readMP3(f.getName());
+                double[] d=toDoubleArray();
+                filearrays[j]=d;
+                j++;
+                BufferedWriter outputWriter = null;
+                  outputWriter = new BufferedWriter(new FileWriter(file.getName()));
+                  for (int i = 0; i < d.length; i++) {
+                    
+                    outputWriter.write(d[i]+"");
+                    
+                    outputWriter.write(Double.toString(d[i]);
+                    outputWriter.newLine();
+                  }
+                  outputWriter.flush();  
+                  outputWriter.close(); 
+            }
+            else 
+            {
+                 InputStream inputStream = new FileInputStream(f.getAbsolutePath());
+                 AudioInputStream as= readRAW(inputStream);
+                 double[] d=toDoubleArray();
+                 filearrays[j]=d;
+                 j++;
+                 BufferedWriter outputWriter = null;
+                  outputWriter = new BufferedWriter(new FileWriter(file.getName()));
+                  for (int i = 0; i < d.length; i++) {
+                    
+                    outputWriter.write(d[i]+"");
+                    
+                    outputWriter.write(Double.toString(d[i]);
+                    outputWriter.newLine();
+                  }
+                  outputWriter.flush();  
+                  outputWriter.close(); 
+            }
+        }
+     return filearrays;
 }
