@@ -11,15 +11,37 @@ import javazoom.jl.converter.Converter;
 import javazoom.jl.decoder.JavaLayerException;
 
 
+/**
+ * Used for reading files in different formats: {@code RAW, WAV, MP3}
+ *
+ * @author noirdemort
+ * @version 1.0
+ */
 class StreamSat {
 
     public enum AudioType { RAW, WAV, MP3 }
 
+    /**
+     * Inner Audio Features.
+     *
+     * audio: AudioStream type, is set when a read[AudioType] method is used.
+     * audioType: Indicates the file format used when the data was read.
+     * audioData: byte array representation of audio data from file.
+     *
+     */
     AudioInputStream audio;
     AudioType audioType;
     byte[] audioData;
 
 
+    /**
+     * Reads .wav file and converts to AudioInputStream and sets byte array and file format
+     *
+     * @param filename Filename consisting of full file path
+     * @return AudioInputStream for file
+     * @throws IOException Raised in case file is not available or accessible
+     * @throws UnsupportedAudioFileException Raised in case of unsupported formats by Package.
+     */
     AudioInputStream readWAV(String filename) throws IOException, UnsupportedAudioFileException{
         AudioInputStream ax = AudioSystem.getAudioInputStream(new File(filename));
         audio = ax;
@@ -28,7 +50,15 @@ class StreamSat {
         return ax;
     }
 
-
+    /**
+     * Reads .mp3 file and converts to AudioInputStream and sets byte array and file format
+     *
+     * @param filename Filename consisting of full file path
+     * @return AudioInputStream for file
+     * @throws IOException Raised in case file is not available or accessible
+     * @throws UnsupportedAudioFileException Raised in case of unsupported formats by Package
+     * @throws JavaLayerException Raised in case conversion of MP3 to .wav fails
+     */
     AudioInputStream readMP3(String filename) throws IOException, UnsupportedAudioFileException, JavaLayerException {
         Converter conv = new Converter();
         conv.convert(filename, "temp.wav");
@@ -51,7 +81,14 @@ class StreamSat {
         return din;
     }
 
-
+    /**
+     * Reads raw data and converts to AudioInputStream and sets byte array and file format
+     *
+     * @param file file InputStream consisting of raw audio data
+     * @return AudioInputStream for file
+     * @throws IOException Raised in case InputStream is not available or accessible
+     * @throws UnsupportedAudioFileException Raised in case of unsupported formats by Package.
+     */
     AudioInputStream readRAW(InputStream file) throws IOException, UnsupportedAudioFileException{
 
         AudioInputStream ax = AudioSystem.getAudioInputStream(file);
@@ -61,7 +98,11 @@ class StreamSat {
         return ax;
     }
 
-
+    /**
+     * Sets byte array and file format, is called automatically by other read methods.
+     *
+     * @throws IOException Raised in case file is not available or accessible
+     */
     private void setData() throws IOException{
         DataInputStream dis = new DataInputStream(audio);      //So we can use readFully()
         AudioFormat format = audio.getFormat();
@@ -70,6 +111,12 @@ class StreamSat {
         dis.close();
     }
 
+    /**
+     * Convert byte array audio data to double array format.
+     *
+     *
+     * @return Double Array consisting of audio data
+     */
     double[] toDoubleArray(){
         int times = Double.SIZE / Byte.SIZE;
         double[] doubles = new double[audioData.length / times];
@@ -79,7 +126,11 @@ class StreamSat {
         return doubles;
     }
 
-
+    /**
+     * Reads Audio and stores audio files recursively from a given path.
+     *
+     * @param directoryPath path from which the audio files are to be read recursively.
+     */
     void readDirectory(String directoryPath){
 
    }

@@ -45,5 +45,4 @@ public class FeatureGrid {
         // TODO("write mel spectogram code here");
     }
 
-    int i,j,z;
 }
