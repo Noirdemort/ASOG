@@ -5,6 +5,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import som;
 
 import org.deeplearning4j.clustering.algorithm.Distance;
 import org.deeplearning4j.clustering.kmeans.KMeansClustering;
