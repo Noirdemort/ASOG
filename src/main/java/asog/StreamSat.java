@@ -133,16 +133,16 @@ class StreamSat {
      *
      * @param directoryPath path from which the audio files are to be read recursively.
      */
-    double[][] readDirectory(String directoryPath){
+    double[][] readDirectory(String directoryPath) throws IOException, UnsupportedAudioFileException, JavaLayerException {
         File directory=new File(directoryPath);
         File[] contents=directory.listFiles();
-      
+
         int l=directory.listFiles().length;
         int j=0;
 
-         double[][] filearrays=new double[l][];
+        double[][] filearrays=new double[l][];
 
-         for( File f:contents)
+        for( File f:contents)
         {
             String extension = getFileExtension(new File(f.getAbsolutePath()));
             if(extension == "*.wav")
@@ -151,7 +151,7 @@ class StreamSat {
                 double[] d=toDoubleArray();
                 filearrays[j]=d;
                 j++;
-                  
+
             }
             else if(extension== "*.mp3")
             {
@@ -159,18 +159,25 @@ class StreamSat {
                 double[] d=toDoubleArray();
                 filearrays[j]=d;
                 j++;
-                
+
             }
-            else 
+            else
             {
-                 InputStream inputStream = new FileInputStream(f.getAbsolutePath());
-                 AudioInputStream as=new StreamSat().readRAW(inputStream);
-                 double[] d=toDoubleArray();
-                 filearrays[j]=d;
-                 j++;
-                
+                InputStream inputStream = new FileInputStream(f.getAbsolutePath());
+                AudioInputStream as=new StreamSat().readRAW(inputStream);
+                double[] d=toDoubleArray();
+                filearrays[j]=d;
+                j++;
+
             }
         }
-     return filearrays;
+        return filearrays;
+    }
+
+    private String getFileExtension(File file) {
+        String fileName = file.getName();
+        if(fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0)
+            return fileName.substring(fileName.lastIndexOf(".")+1);
+        else return "";
     }
 }
