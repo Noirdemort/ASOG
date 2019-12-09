@@ -1,8 +1,9 @@
 package asog;
 
-import com.sun.tools.javac.util.Log;
+
 import java.io.*;
-import som;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.deeplearning4j.clustering.algorithm.Distance;
 import org.deeplearning4j.clustering.kmeans.KMeansClustering;
@@ -37,6 +38,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 import org.nd4j.linalg.primitives.Pair;
 import org.nd4j.linalg.schedule.MapSchedule;
 import org.nd4j.linalg.schedule.ScheduleType;
+import sun.rmi.runtime.Log;
 
 import java.util.HashMap;
 import java.util.List;
@@ -152,9 +154,9 @@ class ProcessingRelay {
     void extractionPipeline(){
 
     }
-    
+
     //Code to plot SOMs after training
-    
+
     /**
      *  Self Organizing Maps for enhancing features
      */
@@ -165,22 +167,22 @@ class ProcessingRelay {
         int epochVal;
         try
         {
-                xVal = x;
-                yVal = y;
-                epochVal = z;
-                if(xVal <= 0 || yVal <= 0 || epochVal <= 0)
-                {
-                    throw new NumberFormatException();
-                }
+            xVal = x;
+            yVal = y;
+            epochVal = z;
+            if(xVal <= 0 || yVal <= 0 || epochVal <= 0)
+            {
+                throw new NumberFormatException();
+            }
         }
         catch(NumberFormatException nfe)
         {
-                return;
+            return;
         }
         long startTime = System.nanoTime();
-        SOM training = new SOM(audiofilesdata, xVal, yVal, epochVal);
+        som training = new som(audiofilesdata, xVal, yVal, epochVal);
         training.train();
-	long endTime = System.nanoTime();
+        long endTime = System.nanoTime();
     }
 
 
@@ -270,8 +272,8 @@ class ProcessingRelay {
                 .seed(seed)
                 .l2(0.0005) // ridge regression value
                 .updater(new Nesterovs(new MapSchedule(
-                            ScheduleType.ITERATION,
-                            learningRateSchedule))) // can also use new Adam(1e-3) in updater
+                        ScheduleType.ITERATION,
+                        learningRateSchedule))) // can also use new Adam(1e-3) in updater
                 .weightInit(WeightInit.XAVIER)
                 .list()
                 .layer(new ConvolutionLayer.Builder(5, 5)
@@ -309,8 +311,6 @@ class ProcessingRelay {
         net.setLearningRate(0.0001);
         net.setEpochCount(10);
         net.setCacheMode(CacheMode.DEVICE);
-
-        Log.format("Total num of params: {}", net.numParams());
 
         DataSet dataSet = new DataSet(featureVector, labelVector);
         SplitTestAndTrain sr = dataSet.splitTestAndTrain(0.8);
