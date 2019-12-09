@@ -1,6 +1,8 @@
 package som;
 import java.util.*;
 
+import Grid;
+
 public class SOM extends Grid
 {
 	// X dimension of the map
