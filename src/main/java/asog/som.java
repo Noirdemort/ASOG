@@ -114,7 +114,8 @@ public class som extends Grid
         double dist;
         double tmp;
 
-        // "Unpack" the gridData, weights, and pair distances into a 1D array
+        // "Unpack" the gridData, weights, and
+        //pair distances into a 1D array
         double [] data = new double[dataRows * dataColumns];
         double [] nodes = new double[weightsRows * weightsColumns];
         double [] distPairs = new double[this.pairArray.length * this.pairArray.length];
@@ -340,5 +341,10 @@ public class som extends Grid
             }
             weightCount++;
         }
+    }
+
+    public double[][] get_weights()
+    {
+        return weights;
     }
 }
