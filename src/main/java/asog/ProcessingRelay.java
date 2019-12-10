@@ -2,12 +2,13 @@ package asog;
 
 
 import java.io.*;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
+import javazoom.jl.decoder.JavaLayerException;
 import org.deeplearning4j.clustering.algorithm.Distance;
 import org.deeplearning4j.clustering.kmeans.KMeansClustering;
 import org.deeplearning4j.nn.conf.CacheMode;
+import org.deeplearning4j.clustering.cluster.Point;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.inputs.InputType;
@@ -40,10 +41,7 @@ import org.nd4j.linalg.schedule.MapSchedule;
 import org.nd4j.linalg.schedule.ScheduleType;
 import sun.rmi.runtime.Log;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 
 /**
@@ -57,8 +55,7 @@ import java.util.Map;
  *  @version 1.0
  *
  */
-class ProcessingRelay {
-
+class ProcessingRelay extends StreamSat{
 
     /**
      * RNN dimensions
@@ -72,13 +69,15 @@ class ProcessingRelay {
      * For training on mixed voice samples dataset and predicting voices count in a voice sample.
      *
      * @param features Array consisting of mfcc or spectogram features for a voice sample per row.
-     * @param labels Each row indicates number of voices for a sample row.
+     * @param labels Each row indicates number of voices for a sample row
      *
      * @return MultiLayerNetwork: Recurrent Neural Network with LSTM features.
      *
      *
      */
-    MultiLayerNetwork rnn(double[] features, int[] labels) {
+
+    //labels array will have only one element as only one count of number of voice samples will be present in a row
+    int[] rnn(double[] features, int[] labels) {
 
         INDArray featureVector = Nd4j.createFromArray(features);
         INDArray labelVector = Nd4j.createFromArray(labels);
@@ -121,6 +120,9 @@ class ProcessingRelay {
         DataSet dataSet = new DataSet(featureVector, labelVector);
         SplitTestAndTrain sr = dataSet.splitTestAndTrain(0.8);
 
+        int[] k_value=new int[1];
+        int i=0;
+
         net.fit(sr.getTrain());
         List<String> rx = net.predict(sr.getTest());
 
@@ -138,30 +140,41 @@ class ProcessingRelay {
 
         for(String r: rx){
             System.out.print(r+" ");
+            k_value[i]=Integer.parseInt(r);
+            i++;
         }
 
         for (float x: grad.toFloatVector()) {
             System.out.print(x);
         }
 
-        return net;
+        return k_value;
     }
 
 
     /**
      * For separating all distinct voices... well probably
      */
-    void extractionPipeline(){
-
+    void extractionPipeline(double[][] features_all_samples, int[][] labels_all_samples, double[][] audiofilesdata, int num_of_samples) {
+        int i;
+        for(i=0;i<num_of_samples;i++)
+        {
+            int[] k=rnn(features_all_samples[i],labels_all_samples[i]);
+            double[][] features=new double[1][features_all_samples[i].length];
+            features[0]=features_all_samples[i];
+            double[][] enhanced_features=som(features,10,10,100);
+            KMeansClustering kmeans= autoKencoders(enhanced_features[0],k[0]);
+            int outputNumClusters=k[0];
+            MultiLayerNetwork net_cnn=cnn(enhanced_features[0],labels_all_samples[i],outputNumClusters);
+        }
     }
-
-    //Code to plot SOMs after training
 
     /**
      *  Self Organizing Maps for enhancing features
      */
-    void som(double[][] audiofilesdata,int x, int y,int z)
+    double[][] som(double[][] features,int x, int y,int z)
     {
+        double[][] enhanced_features=new double[1][features[0].length];
         int xVal;
         int yVal;
         int epochVal;
@@ -174,15 +187,20 @@ class ProcessingRelay {
             {
                 throw new NumberFormatException();
             }
+            long startTime = System.nanoTime();
+            som training = new som(features, xVal, yVal, epochVal);
+            training.train();
+            long endTime = System.nanoTime();
+            double[] distances=training.getDistances();
+            int[] nodes=training.getNodes();
+            int i;
+            enhanced_features=training.get_weights();
+            return enhanced_features;
         }
-        catch(NumberFormatException nfe)
-        {
-            return;
+        catch(NumberFormatException nfe) {
+            System.out.println(nfe);
+            return null;
         }
-        long startTime = System.nanoTime();
-        som training = new som(audiofilesdata, xVal, yVal, epochVal);
-        training.train();
-        long endTime = System.nanoTime();
     }
 
 
@@ -232,7 +250,6 @@ class ProcessingRelay {
         // TODO("Implement Kmeans properly and verify auto-encoder model")
         final int MAX_ITERATIONS = 300;
         KMeansClustering kmeans = KMeansClustering.setup(numClusters, MAX_ITERATIONS, Distance.COSINE_DISTANCE);
-
         return kmeans;
     }
 
@@ -242,11 +259,11 @@ class ProcessingRelay {
      *
      * @param features Array consisting of mfcc or spectogram features of a single voice per row.
      * @param labels Each row indicates number of voices for a sample row.
-     * @param outputNum Total types of output possible.
+     * @param outputNumClusters Total types of output possible.
      *
      * @return MultiLayerNetwork: Convolutional Neural Network
      */
-    MultiLayerNetwork cnn(double[] features, int[] labels, int outputNum){
+    MultiLayerNetwork cnn(double[] features, int[] labels, int outputNumClusters){
 
         INDArray featureVector = Nd4j.createFromArray(features);
         INDArray labelVector = Nd4j.createFromArray(labels);
@@ -299,7 +316,7 @@ class ProcessingRelay {
                         .nOut(500)
                         .build())
                 .layer(new OutputLayer.Builder(LossFunction.NEGATIVELOGLIKELIHOOD)
-                        .nOut(outputNum)
+                        .nOut(outputNumClusters)
                         .activation(Activation.SOFTMAX)
                         .build())
                 .setInputType(InputType.convolutionalFlat(height, width, channels))
@@ -344,8 +361,6 @@ class ProcessingRelay {
         /* For saving model to  disk */
 //        File modelPath = new File(BASE_PATH + "/model_name.zip");
 //        ModelSerializer.writeModel(net, modelPath, true);
-
-
     }
 
 }
